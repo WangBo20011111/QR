@@ -95,11 +95,18 @@ if __name__ == '__main__':
     cerebro.broker.setcommission(commission=0.0003) #双边佣金
     cerebro.broker.set_slippage_perc(perc=0.0001) # 双边滑点
     cerebro.addstrategy(StockSelectStrategy)
-    cerebro.addnanlyzer(bt.analyzers.PyFolio, _name='pyfolio')
+    cerebro.addanalyzer(bt.analyzers.TimeReturn, _name='_TimeReturn')
+    cerebro.addanalyzer(bt.analyzers.AnnualReturn, _name='annual_return')
+    cerebro.addanalyzer(bt.analyzers.Drawdown, _name='drawdown')
     result = cerebro.run()
 
-    pyfolio = result[0].analyzers.pyfolio # 注意：后边不要调用.get_analysis()方法
-    returns, positions, transactions, gross_lev = pyfolio.get_pf_items()
+    ret = pd.Series(result[0].analyzers._TimeReturn.get_analysis())
+    annual_return = pd.Series(result[0].analyzers.annual_return.get_analysis())
+    print(f'夏普比率:{result[0].analyzers.sharpe_ratio.get_analysis()['sharperatio']:.2f}')
+    print(f'最大回撤:{result[0].analyzers.drawdown.get_analysis()['drawdown']:.2f}%')
+
+    cum_ret = ret.cumsum()
+    
 
     import pyfolio as pf
     pf.create_full_tear_sheet(returns)
